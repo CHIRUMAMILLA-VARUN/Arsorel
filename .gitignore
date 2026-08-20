@@ -1,0 +1,16 @@
+# Keep the big brochure PDF out of the website repo
+*.pdf
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Python (from tools/make_qr.py)
+__pycache__/
+*.pyc
+
+# Local dev tooling
+.claude/
