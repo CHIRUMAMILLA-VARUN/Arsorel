@@ -1,0 +1,137 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Cart — Arsorel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700;800&family=Parisienne&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<div id="site-header-slot"></div>
+
+<main class="wrap">
+  <div class="crumb"><a href="index.html">Home</a> › Your cart</div>
+  <section class="section" style="padding-top:14px">
+    <h1 class="section-title">Your cart</h1>
+
+    <div id="cartArea">
+      <div class="cart-layout">
+        <!-- LEFT: items + details -->
+        <div>
+          <div id="itemList" style="display:flex;flex-direction:column;gap:12px"></div>
+
+          <div class="about" style="margin-top:22px">
+            <h2 style="margin-top:0">Anything else? ✨</h2>
+            <p style="margin-top:0">Want a flower we don't list, a special colour, or a custom piece?
+               Tell us here and we'll add it to your order.</p>
+            <div class="field">
+              <label for="extra">Extra items / custom requests (optional)</label>
+              <textarea id="extra" placeholder="e.g. 1 peony bouquet in blush pink, a name keychain saying 'Aanya'…"></textarea>
+            </div>
+          </div>
+
+          <div class="about" style="margin-top:22px">
+            <h2 style="margin-top:0">Your details</h2>
+            <div class="field">
+              <label for="cname">Name *</label>
+              <input id="cname" placeholder="Your name">
+            </div>
+            <div class="field">
+              <label for="cphone">Phone / WhatsApp *</label>
+              <input id="cphone" inputmode="tel" placeholder="10-digit mobile number">
+            </div>
+            <div class="field">
+              <label for="caddr">Delivery address (optional now)</label>
+              <textarea id="caddr" placeholder="Where should we deliver?"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: summary -->
+        <aside class="summary">
+          <h2 style="margin-top:0;font-family:var(--serif);color:var(--gold-deep)">Order summary</h2>
+          <div id="summaryLines"></div>
+          <div class="total"><span>Total</span><span id="grandTotal">₹0</span></div>
+          <p class="note" id="reqNote" style="display:none;margin-top:12px">
+            Some items are priced to your request. We'll confirm the final total with you on WhatsApp before you pay.
+          </p>
+          <button class="btn block" style="margin-top:16px" id="checkoutBtn" onclick="checkout()">Proceed to payment →</button>
+          <a class="btn ghost block" style="margin-top:10px" href="index.html#categories">Keep shopping</a>
+        </aside>
+      </div>
+    </div>
+
+    <div id="emptyState" class="empty" style="display:none">
+      <div style="font-size:3rem">🧺</div>
+      <h2 style="font-family:var(--serif)">Your cart is empty</h2>
+      <p>Let's find you something to cherish.</p>
+      <a class="btn" href="index.html#categories">Browse the collections</a>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer-slot"></div>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/app.js"></script>
+<script>
+  function render() {
+    const lines = Cart.detailed();
+    const hasItems = lines.length > 0;
+    document.getElementById("cartArea").style.display = hasItems ? "" : "none";
+    document.getElementById("emptyState").style.display = hasItems ? "none" : "";
+    if (!hasItems) return;
+
+    document.getElementById("itemList").innerHTML = lines.map((l) => `
+      <div class="cart-item">
+        ${thumbHTML(l)}
+        <div class="info">
+          <h4>${l.name}</h4>
+          <div style="color:var(--ink-soft);font-size:.92rem">${l.price == null ? "Price on request" : money(l.price) + " each"}</div>
+          <div class="qty" style="margin-top:6px">
+            <button onclick="setQ('${l.id}', ${l.qty - 1})">−</button>
+            <input value="${l.qty}" readonly>
+            <button onclick="setQ('${l.id}', ${l.qty + 1})">+</button>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="price" style="font-size:1.1rem">${l.lineTotal == null ? "—" : money(l.lineTotal)}</div>
+          <button class="rm" onclick="removeItem('${l.id}')">Remove</button>
+        </div>
+      </div>
+    `).join("");
+
+    document.getElementById("summaryLines").innerHTML = lines.map((l) => `
+      <div class="line"><span>${l.name} × ${l.qty}</span><span>${l.lineTotal == null ? "On request" : money(l.lineTotal)}</span></div>
+    `).join("");
+
+    document.getElementById("grandTotal").textContent = money(Cart.knownTotal());
+    document.getElementById("reqNote").style.display = Cart.hasRequestItems() ? "" : "none";
+  }
+
+  function setQ(id, q) { Cart.setQty(id, q); render(); }
+  function removeItem(id) { Cart.remove(id); render(); toast("Removed from cart"); }
+
+  function checkout() {
+    const name = document.getElementById("cname").value.trim();
+    const phone = document.getElementById("cphone").value.trim();
+    if (!name || !phone) {
+      toast("Please add your name and phone number");
+      document.getElementById(!name ? "cname" : "cphone").focus();
+      return;
+    }
+    const order = {
+      lines: Cart.detailed().map((l) => ({ name: l.name, qty: l.qty, price: l.price, lineTotal: l.lineTotal })),
+      knownTotal: Cart.knownTotal(),
+      hasRequestItems: Cart.hasRequestItems(),
+      extra: document.getElementById("extra").value.trim(),
+      customer: { name, phone, address: document.getElementById("caddr").value.trim() },
+      at: new Date().toISOString(),
+    };
+    localStorage.setItem("arsorel_order_v1", JSON.stringify(order));
+    location.href = "payment.html";
+  }
+
+  render();
+</script>

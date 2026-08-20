@@ -1,0 +1,71 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arsorel — The Artisanal Treasures | Handmade Pipe-Cleaner Flowers</title>
+<meta name="description" content="Arsorel makes hand-twisted pipe-cleaner flowers, bouquets, keychains and home décor. Made to be cherished — flowers that never wilt.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700;800&family=Parisienne&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<div id="site-header-slot"></div>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1 class="logo-big">Arsorel</h1>
+    <div class="artisanal">The Artisanal Treasures</div>
+    <div class="craft">Hand-carved · Hand-twisted · Hand-made</div>
+    <div class="motto">Made to be cherished</div>
+    <p class="lead">Handmade pipe-cleaner flowers and treasures that never wilt — bouquets, keychains and little touches of home, twisted petal by petal, just for you.</p>
+    <a class="btn" href="#categories">Explore our treasures</a>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section" id="about">
+    <div class="about">
+      <h2>Our little story</h2>
+      <p id="aboutText">
+        Arsorel began as a pair of hands, a bundle of pipe cleaners, and a simple wish —
+        to make flowers that could be kept forever. Every piece we make is hand-carved,
+        hand-twisted and hand-made, so no two are ever exactly alike. From single-flower
+        bouquets to tiny keychains and cosy home décor, each treasure is crafted slowly and
+        with a lot of love, then sent out into the world to be cherished.
+      </p>
+      <div class="facts">
+        <div class="fact"><div class="big" id="foundedFact">2025</div><div class="lbl">Founded</div></div>
+        <div class="fact"><div class="big">100%</div><div class="lbl">Handmade</div></div>
+        <div class="fact"><div class="big">∞</div><div class="lbl">Never wilts</div></div>
+        <div class="fact"><div class="big">🇮🇳</div><div class="lbl">Made in India</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="section" id="categories">
+    <h2 class="section-title">What we make</h2>
+    <p class="section-sub">Tap a collection to see everything inside it.</p>
+    <div class="grid" id="catGrid"></div>
+  </section>
+
+</main>
+
+<div id="site-footer-slot"></div>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Fill dynamic bits from config
+  document.getElementById("foundedFact").textContent = CFG.foundedYear;
+
+  // Render category cards
+  document.getElementById("catGrid").innerHTML = CAT.categories.map((c) => `
+    <a class="card cat-card" href="category.html?cat=${c.id}" style="text-decoration:none;color:inherit">
+      <div class="emoji">${c.emoji}</div>
+      <h3>${c.name}</h3>
+      <p>${c.tagline}</p>
+    </a>
+  `).join("");
+</script>
