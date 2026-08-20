@@ -1,0 +1,115 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment — Arsorel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700;800&family=Parisienne&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<div id="site-header-slot"></div>
+
+<main class="wrap">
+  <div class="crumb"><a href="index.html">Home</a> › <a href="cart.html">Cart</a> › Payment</div>
+  <section class="section" style="padding-top:14px">
+    <h1 class="section-title">Complete your order</h1>
+    <p class="section-sub">
+      <span class="badge-secure">🔒 Secure UPI — paid straight to Arsorel's bank</span>
+    </p>
+
+    <div id="noOrder" class="empty" style="display:none">
+      <div style="font-size:3rem">🧾</div>
+      <h2 style="font-family:var(--serif)">No order to pay for yet</h2>
+      <a class="btn" href="index.html#categories">Browse the collections</a>
+    </div>
+
+    <div class="pay-grid" id="payGrid">
+      <!-- LEFT: pay -->
+      <div class="pay-card">
+        <h2 style="margin-top:0;font-family:var(--serif);color:var(--gold-deep)">Pay with UPI</h2>
+        <div class="qr-box">
+          <img src="images/upi-qr.png" alt="Arsorel UPI QR code"
+               onerror="this.style.display='none';document.getElementById('qrFallback').style.display='block'">
+          <div id="qrFallback" style="display:none;color:var(--ink-soft)">Scan the UPI ID below in any UPI app.</div>
+          <p style="margin:14px 0 6px;color:var(--ink-soft)">Scan with any UPI app<br>(GPay · PhonePe · Paytm · BHIM)</p>
+          <div class="upi-id" id="upiId"></div>
+          <a class="btn block" style="margin-top:14px" id="payBtn">Pay <span id="payAmt"></span> in UPI app</a>
+          <p class="note" style="margin-top:12px">The button opens your UPI app on a phone. On a laptop, scan the QR or copy the UPI ID above.</p>
+        </div>
+      </div>
+
+      <!-- RIGHT: summary + confirm -->
+      <div class="pay-card">
+        <h2 style="margin-top:0;font-family:var(--serif);color:var(--gold-deep)">Your order</h2>
+        <div id="orderLines"></div>
+        <div class="total"><span>Total to pay</span><span id="orderTotal">₹0</span></div>
+        <p class="note" id="reqNote" style="display:none;margin-top:12px">
+          Some items are priced to your request — we'll confirm the final amount on WhatsApp, so please send us your order first and pay the confirmed total.
+        </p>
+
+        <h3 style="font-family:var(--serif);color:var(--gold-deep);margin-bottom:6px">How it works</h3>
+        <ol class="steps">
+          <li>Pay the total using the QR / UPI ID.</li>
+          <li>Take a screenshot of the payment (or note the UPI reference no.).</li>
+          <li>Tap the button below to send us your order on WhatsApp and attach the screenshot.</li>
+          <li>We confirm your order and delivery. Done! 🌸</li>
+        </ol>
+
+        <a class="btn wa block" id="waBtn" target="_blank" rel="noopener">📲 Send order &amp; payment on WhatsApp</a>
+        <a class="btn ghost block" style="margin-top:10px" id="emailBtn">✉️ Or email us the order</a>
+        <p class="note" style="margin-top:12px">
+          Prefer to pay after confirming? Just send the order on WhatsApp first — we'll reply with everything.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer-slot"></div>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const order = (() => {
+    try { return JSON.parse(localStorage.getItem("arsorel_order_v1")); } catch { return null; }
+  })();
+
+  if (!order || !order.lines || !order.lines.length) {
+    document.getElementById("payGrid").style.display = "none";
+    document.getElementById("noOrder").style.display = "";
+  } else {
+    const total = order.knownTotal || 0;
+
+    // UPI details
+    document.getElementById("upiId").textContent = CFG.upiId;
+    document.getElementById("payAmt").textContent = total > 0 ? money(total) : "";
+    const note = encodeURIComponent("Arsorel order - " + (order.customer?.name || ""));
+    const amtPart = total > 0 ? `&am=${total}` : "";
+    document.getElementById("payBtn").href =
+      `upi://pay?pa=${encodeURIComponent(CFG.upiId)}&pn=${encodeURIComponent(CFG.upiName)}&cu=INR${amtPart}&tn=${note}`;
+
+    // Order summary
+    document.getElementById("orderLines").innerHTML = order.lines.map((l) => `
+      <div class="line"><span>${l.name} × ${l.qty}</span><span>${l.lineTotal == null ? "On request" : money(l.lineTotal)}</span></div>
+    `).join("");
+    document.getElementById("orderTotal").textContent = money(total);
+    document.getElementById("reqNote").style.display = order.hasRequestItems ? "" : "none";
+
+    // Build the WhatsApp / email message
+    const lines = order.lines.map((l) => `• ${l.name} × ${l.qty}${l.lineTotal == null ? " (price on request)" : " — " + money(l.lineTotal)}`).join("\n");
+    const c = order.customer || {};
+    let msg =
+      `🌸 *New Arsorel order*\n\n${lines}\n\n` +
+      (total > 0 ? `*Total: ${money(total)}*\n` : "") +
+      (order.hasRequestItems ? `(Some items priced on request — please confirm.)\n` : "") +
+      (order.extra ? `\n*Also wanted:* ${order.extra}\n` : "") +
+      `\n*Name:* ${c.name || "-"}\n*Phone:* ${c.phone || "-"}\n` +
+      (c.address ? `*Address:* ${c.address}\n` : "") +
+      `\nI've paid via UPI (screenshot attached).`;
+
+    document.getElementById("waBtn").href = `https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent(msg)}`;
+    document.getElementById("emailBtn").href =
+      `mailto:${CFG.email}?subject=${encodeURIComponent("New Arsorel order — " + (c.name || ""))}&body=${encodeURIComponent(msg)}`;
+  }
+</script>
