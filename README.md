@@ -7,9 +7,8 @@ It's a plain **static website** (HTML + CSS + a little JavaScript), so it runs
 for **free** on GitHub Pages — no server and no monthly cost.
 
 ## 🌐 Live site
-Once GitHub Pages is turned on (Settings → Pages → Deploy from branch → `main` / root):
 
-> https://chirumamilla-varun.github.io/Arsorel/
+> https://sauphyra-afk.github.io/Arsorel/
 
 ## What's inside
 | File | What it is |
